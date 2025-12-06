@@ -1,98 +1,272 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { StyleSheet, ScrollView, View, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section */}
+        <ThemedView style={styles.header}>
+          <View>
+            <ThemedText type="title" style={styles.greeting}>
+              שלום! 👋
+            </ThemedText>
+            <ThemedText style={styles.subGreeting}>
+              בואו נתחיל לנהל את המשימות שלך
+            </ThemedText>
+          </View>
+        </ThemedView>
+
+        {/* Stats Cards */}
+        <View style={styles.statsContainer}>
+          <StatCard
+            icon="checkmark.circle.fill"
+            label="הושלמו"
+            value="0"
+            color="#4CAF50"
+            colors={colors}
+          />
+          <StatCard
+            icon="clock.fill"
+            label="בתהליך"
+            value="0"
+            color="#FF9800"
+            colors={colors}
+          />
+          <StatCard
+            icon="list.bullet"
+            label="סה״כ"
+            value="0"
+            color={colors.tint}
+            colors={colors}
+          />
+        </View>
+
+        {/* Quick Actions */}
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            פעולות מהירות
+          </ThemedText>
+          <View style={styles.actionsGrid}>
+            <ActionButton
+              icon="plus.circle.fill"
+              label="משימה חדשה"
+              colors={colors}
+            />
+            <ActionButton
+              icon="calendar"
+              label="תאריכים"
+              colors={colors}
+            />
+            <ActionButton
+              icon="tag.fill"
+              label="תגיות"
+              colors={colors}
+            />
+            <ActionButton
+              icon="chart.bar.fill"
+              label="סטטיסטיקות"
+              colors={colors}
+            />
+          </View>
+        </ThemedView>
+
+        {/* Recent Tasks Section */}
+        <ThemedView style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              משימות אחרונות
+            </ThemedText>
+            <TouchableOpacity>
+              <ThemedText style={[styles.seeAll, { color: colors.tint }]}>
+                הצג הכל
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+          <ThemedView style={styles.emptyState}>
+            <IconSymbol 
+              name="tray" 
+              size={48} 
+              color={colors.icon} 
+            />
+            <ThemedText style={styles.emptyStateText}>
+              אין משימות עדיין
+            </ThemedText>
+            <ThemedText style={styles.emptyStateSubtext}>
+              התחל ליצור משימות חדשות
+            </ThemedText>
+          </ThemedView>
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function StatCard({ 
+  icon, 
+  label, 
+  value, 
+  color, 
+  colors 
+}: { 
+  icon: 'checkmark.circle.fill' | 'clock.fill' | 'list.bullet'; 
+  label: string; 
+  value: string; 
+  color: string; 
+  colors: typeof Colors.light;
+}) {
+  return (
+    <ThemedView style={styles.statCard}>
+      <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
+        <IconSymbol name={icon} size={24} color={color} />
+      </View>
+      <ThemedText type="title" style={styles.statValue}>
+        {value}
+      </ThemedText>
+      <ThemedText style={styles.statLabel}>
+        {label}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function ActionButton({ 
+  icon, 
+  label, 
+  colors 
+}: { 
+  icon: 'plus.circle.fill' | 'calendar' | 'tag.fill' | 'chart.bar.fill'; 
+  label: string; 
+  colors: typeof Colors.light;
+}) {
+  return (
+    <TouchableOpacity style={styles.actionButton}>
+      <ThemedView style={[styles.actionButtonContent, { borderColor: colors.icon + '20' }]}>
+        <IconSymbol name={icon} size={28} color={colors.tint} />
+        <ThemedText style={styles.actionButtonLabel}>
+          {label}
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  greeting: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subGreeting: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    marginBottom: 0,
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  actionButton: {
+    width: '47%',
+  },
+  actionButtonContent: {
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+  },
+  actionButtonLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  emptyState: {
+    padding: 40,
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    opacity: 0.6,
+    textAlign: 'center',
   },
 });
