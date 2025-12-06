@@ -39,8 +39,18 @@ export default function PublishScreen() {
   const greeting = getGreeting();
   const firstName = 'משתמש'; // TODO: Replace with actual user first name from auth
 
+  const isDark = colorScheme === 'dark';
+  const topBackgroundColor = isDark ? '#1A1A1A' : colors.tint;
+  const contentBackgroundColor = isDark ? '#2A2A2A' : '#FFFFFF';
+  const inputBackgroundColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#FFFFFF';
+  const buttonBackgroundColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#FFFFFF';
+  const pillBackgroundColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#F5F5F5';
+  const categoryBackgroundColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#F5F5F5';
+  const textColor = isDark ? '#FFFFFF' : colors.text;
+  const placeholderColor = isDark ? 'rgba(255, 255, 255, 0.5)' : colors.icon;
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.tint }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: topBackgroundColor }]} edges={['top']}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -75,31 +85,35 @@ export default function PublishScreen() {
         {/* Search Bar Section */}
         <ThemedView style={styles.searchSection}>
           <View style={[styles.searchBarContainer, { 
-            backgroundColor: '#FFFFFF',
-            borderColor: colors.icon + '20',
+            backgroundColor: inputBackgroundColor,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : colors.icon + '20',
           }]}>
             <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
+              style={[styles.searchInput, { color: textColor }]}
               placeholder="מה המשימה להיום?"
-              placeholderTextColor={colors.icon}
+              placeholderTextColor={placeholderColor}
               textAlign="right"
             />
           </View>
           <TouchableOpacity 
-            style={[styles.suggestButton, { backgroundColor: '#FFFFFF' }]}
+            style={[styles.suggestButton, { 
+              backgroundColor: buttonBackgroundColor,
+            }]}
             onPress={() => router.push('/create-task')}
           >
-            <ThemedText style={[styles.suggestButtonText, { color: colors.tint }]}>
+            <ThemedText style={[styles.suggestButtonText, { 
+              color: isDark ? '#FFFFFF' : colors.tint 
+            }]}>
               קבל הצעות
             </ThemedText>
           </TouchableOpacity>
         </ThemedView>
 
-        {/* Content Container with White Background */}
-        <View style={[styles.contentContainer, { backgroundColor: '#FFFFFF' }]}>
+        {/* Content Container */}
+        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
           {/* Popular Tasks */}
           <ThemedView style={styles.section}>
-            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: colors.text }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: textColor }]}>
               משימות פופולריות
             </ThemedText>
             <View style={styles.pillsContainer}>
@@ -107,11 +121,11 @@ export default function PublishScreen() {
                 <TouchableOpacity
                   key={index}
                   style={[styles.pill, { 
-                    backgroundColor: colorScheme === 'dark' ? '#2A2A2A' : '#F5F5F5',
-                    borderColor: colors.icon + '20',
+                    backgroundColor: pillBackgroundColor,
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : colors.icon + '20',
                   }]}
                 >
-                  <ThemedText style={styles.pillText}>{task}</ThemedText>
+                  <ThemedText style={[styles.pillText, { color: textColor }]}>{task}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -119,7 +133,7 @@ export default function PublishScreen() {
 
           {/* Categories */}
           <ThemedView style={styles.section}>
-            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: colors.text }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: textColor }]}>
               קטגוריות
             </ThemedText>
             <View style={styles.categoriesContainer}>
@@ -127,12 +141,12 @@ export default function PublishScreen() {
                 <TouchableOpacity
                   key={index}
                   style={[styles.categoryButton, { 
-                    backgroundColor: colorScheme === 'dark' ? '#2A2A2A' : '#F5F5F5',
-                    borderColor: colors.icon + '20',
+                    backgroundColor: categoryBackgroundColor,
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : colors.icon + '20',
                   }]}
                 >
                   <ThemedText style={styles.categoryIcon}>{category.icon}</ThemedText>
-                  <ThemedText style={styles.categoryText}>{category.name}</ThemedText>
+                  <ThemedText style={[styles.categoryText, { color: textColor }]}>{category.name}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>

@@ -30,6 +30,7 @@ const MAPPING = {
   'message.fill': 'message',
   'magnifyingglass': 'search',
   'person.fill': 'person',
+  'trash.fill': 'delete',
 } as IconMapping;
 
 /**

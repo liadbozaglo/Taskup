@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
+import { useTasks, WhenOption, LocationOption } from '@/contexts/TasksContext';
 
 type Step = 'title' | 'when' | 'location' | 'description' | 'photo' | 'budget' | 'confirmation' | 'success';
 
@@ -17,6 +18,7 @@ type LocationOption = 'address' | 'remote';
 export default function CreateTaskScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { addTask } = useTasks();
   const [step, setStep] = useState<Step>('title');
   const [taskTitle, setTaskTitle] = useState('');
   const [whenOption, setWhenOption] = useState<WhenOption | null>(null);
@@ -53,7 +55,19 @@ export default function CreateTaskScreen() {
   };
 
   const handlePublish = () => {
-    // TODO: Save task to backend
+    if (!whenOption || !locationOption) return;
+    
+    addTask({
+      title: taskTitle,
+      description,
+      whenOption,
+      selectedDate,
+      locationOption,
+      address: locationOption === 'address' ? address : '',
+      photo,
+      budget,
+    });
+    
     setStep('success');
   };
 

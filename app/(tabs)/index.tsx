@@ -1,14 +1,34 @@
+import { useState } from 'react';
 import { StyleSheet, ScrollView, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
+import { useTasks, Task } from '@/contexts/TasksContext';
+
+type Tab = 'my-tasks' | 'in-progress' | 'completed';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { myTasks } = useTasks();
+  const [activeTab, setActiveTab] = useState<Tab>('my-tasks');
+
+  const filteredTasks = myTasks.filter(task => {
+    if (activeTab === 'my-tasks') return task.status === 'active';
+    if (activeTab === 'in-progress') return task.status === 'in-progress';
+    if (activeTab === 'completed') return task.status === 'completed';
+    return true;
+  });
+
+  const stats = {
+    total: myTasks.length,
+    completed: myTasks.filter(t => t.status === 'completed').length,
+    inProgress: myTasks.filter(t => t.status === 'in-progress').length,
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -34,80 +54,71 @@ export default function HomeScreen() {
           <StatCard
             icon="checkmark.circle.fill"
             label="הושלמו"
-            value="0"
+            value={stats.completed.toString()}
             color="#4CAF50"
             colors={colors}
           />
           <StatCard
             icon="clock.fill"
             label="בתהליך"
-            value="0"
+            value={stats.inProgress.toString()}
             color="#FF9800"
             colors={colors}
           />
           <StatCard
             icon="list.bullet"
             label="סה״כ"
-            value="0"
+            value={stats.total.toString()}
             color={colors.tint}
             colors={colors}
           />
         </View>
 
-        {/* Quick Actions */}
-        <ThemedView style={styles.section}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            פעולות מהירות
-          </ThemedText>
-          <View style={styles.actionsGrid}>
-            <ActionButton
-              icon="plus.circle.fill"
-              label="משימה חדשה"
-              colors={colors}
-            />
-            <ActionButton
-              icon="calendar"
-              label="תאריכים"
-              colors={colors}
-            />
-            <ActionButton
-              icon="tag.fill"
-              label="תגיות"
-              colors={colors}
-            />
-            <ActionButton
-              icon="chart.bar.fill"
-              label="סטטיסטיקות"
-              colors={colors}
-            />
-          </View>
-        </ThemedView>
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TabButton
+            label="המשימות שלי"
+            isActive={activeTab === 'my-tasks'}
+            onPress={() => setActiveTab('my-tasks')}
+            colors={colors}
+          />
+          <TabButton
+            label="בתהליך"
+            isActive={activeTab === 'in-progress'}
+            onPress={() => setActiveTab('in-progress')}
+            colors={colors}
+          />
+          <TabButton
+            label="הושלמו"
+            isActive={activeTab === 'completed'}
+            onPress={() => setActiveTab('completed')}
+            colors={colors}
+          />
+        </View>
 
-        {/* Recent Tasks Section */}
+        {/* Tasks List */}
         <ThemedView style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              משימות אחרונות
-            </ThemedText>
-            <TouchableOpacity>
-              <ThemedText style={[styles.seeAll, { color: colors.tint }]}>
-                הצג הכל
+          {filteredTasks.length === 0 ? (
+            <ThemedView style={styles.emptyState}>
+              <IconSymbol 
+                name="tray" 
+                size={48} 
+                color={colors.icon} 
+              />
+              <ThemedText style={styles.emptyStateText}>
+                אין משימות עדיין
               </ThemedText>
-            </TouchableOpacity>
-          </View>
-          <ThemedView style={styles.emptyState}>
-            <IconSymbol 
-              name="tray" 
-              size={48} 
-              color={colors.icon} 
-            />
-            <ThemedText style={styles.emptyStateText}>
-              אין משימות עדיין
-            </ThemedText>
-            <ThemedText style={styles.emptyStateSubtext}>
-              התחל ליצור משימות חדשות
-            </ThemedText>
-          </ThemedView>
+              <ThemedText style={styles.emptyStateSubtext}>
+                התחל ליצור משימות חדשות
+              </ThemedText>
+            </ThemedView>
+          ) : (
+            <View style={styles.tasksList}>
+              {filteredTasks.map((task) => (
+                <TaskCard key={task.id} task={task} colors={colors} />
+              ))}
+            </View>
+          )}
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
@@ -142,22 +153,90 @@ function StatCard({
   );
 }
 
-function ActionButton({ 
-  icon, 
-  label, 
-  colors 
-}: { 
-  icon: 'plus.circle.fill' | 'calendar' | 'tag.fill' | 'chart.bar.fill'; 
-  label: string; 
+function TabButton({
+  label,
+  isActive,
+  onPress,
+  colors,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
   colors: typeof Colors.light;
 }) {
   return (
-    <TouchableOpacity style={styles.actionButton}>
-      <ThemedView style={[styles.actionButtonContent, { borderColor: colors.icon + '20' }]}>
-        <IconSymbol name={icon} size={28} color={colors.tint} />
-        <ThemedText style={styles.actionButtonLabel}>
-          {label}
+    <TouchableOpacity
+      style={[
+        styles.tabButton,
+        {
+          backgroundColor: isActive ? colors.tint : 'transparent',
+          borderBottomColor: isActive ? colors.tint : 'transparent',
+        },
+      ]}
+      onPress={onPress}
+    >
+      <ThemedText
+        style={[
+          styles.tabButtonText,
+          { color: isActive ? '#FFFFFF' : colors.text },
+        ]}
+      >
+        {label}
+      </ThemedText>
+    </TouchableOpacity>
+  );
+}
+
+function TaskCard({ task, colors }: { task: Task; colors: typeof Colors.light }) {
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'גמיש';
+    return date.toLocaleDateString('he-IL', {
+      day: 'numeric',
+      month: 'short',
+    });
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.taskCard}
+      onPress={() => router.push({ pathname: '/task-detail', params: { id: task.id } })}
+    >
+      <ThemedView style={styles.taskCardContent}>
+        <View style={styles.taskHeader}>
+          <ThemedText type="subtitle" style={styles.taskTitle}>
+            {task.title}
+          </ThemedText>
+          <View style={[styles.statusBadge, { backgroundColor: colors.tint + '20' }]}>
+            <ThemedText style={[styles.statusText, { color: colors.tint }]}>
+              {task.status === 'active' ? 'פעיל' : task.status === 'in-progress' ? 'בתהליך' : 'הושלם'}
+            </ThemedText>
+          </View>
+        </View>
+        <ThemedText style={styles.taskDescription} numberOfLines={2}>
+          {task.description}
         </ThemedText>
+        <View style={styles.taskFooter}>
+          <View style={styles.taskMeta}>
+            <IconSymbol name="clock.fill" size={16} color={colors.icon} />
+            <ThemedText style={styles.taskMetaText}>
+              {formatDate(task.selectedDate)}
+            </ThemedText>
+          </View>
+          {task.budget && (
+            <View style={styles.taskMeta}>
+            <ThemedText style={styles.taskMetaText}>
+              {task.budget} ש״ח
+            </ThemedText>
+          </View>
+          )}
+          {task.offers.length > 0 && (
+            <View style={styles.taskMeta}>
+              <ThemedText style={[styles.offersBadge, { color: colors.tint }]}>
+                {task.offers.length} הצעות
+              </ThemedText>
+            </View>
+          )}
+        </View>
       </ThemedView>
     </TouchableOpacity>
   );
@@ -187,7 +266,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
@@ -217,41 +296,77 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.7,
   },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
+  tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 8,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderBottomWidth: 2,
     alignItems: 'center',
-    marginBottom: 16,
   },
-  sectionTitle: {
-    marginBottom: 0,
-  },
-  seeAll: {
+  tabButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  section: {
+    marginBottom: 32,
+  },
+  tasksList: {
     gap: 12,
   },
-  actionButton: {
-    width: '47%',
+  taskCard: {
+    marginBottom: 12,
   },
-  actionButtonContent: {
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
+  taskCardContent: {
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
   },
-  actionButtonLabel: {
+  taskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  taskTitle: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  taskDescription: {
     fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
+    opacity: 0.7,
+    lineHeight: 20,
+  },
+  taskFooter: {
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'center',
+  },
+  taskMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  taskMetaText: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  offersBadge: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   emptyState: {
     padding: 40,
